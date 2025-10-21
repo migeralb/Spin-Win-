@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Meetup Coffee Shop - Spin & Win!</title>
+    <style>
+        /* --- CSS Styling (FINAL CONSOLIDATED VERSION) --- */
+          body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+    
+        /* --- CRITICAL BACKGROUND IMAGE FIX --- */
+            background-image: url('background 2.jpeg'); 
+            background-size: cover; /* Ensures the image covers the entire screen */
+            background-position: center; /* Centers the image */
+            background-attachment: fixed; /* Keeps the background static if the page scrolls */
+    
+         color: #1a1a1a; /* Keep foreground text dark */
+        }
+
+        h1 {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #e1c254;
+            background-color: #15402b;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin-bottom: 40px;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 6s cubic-bezier(0.25, 0.1, 0, 1);
+            overflow: hidden;
+            
+            /* CONIC GRADIENT: Final colors */
+            background: conic-gradient(
+                #E4B86A 0deg 60deg,
+                #F2E7D5 60deg 120deg,
+                #B2D98D 120deg 180deg,
+                #C6E7B4 180deg 240deg,
+                #5C8D5C 240deg 300deg,
+                #3A5F40 300deg 360deg
+            );
+        }
+
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 20px solid #cc0000;
+            z-index: 20;
+        }
+
+        .center-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120px;
+            height: 120px;
+            background-color: #fff;
+            border-radius: 50%;
+            border: 2px solid #e1c254;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .center-logo img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .prize-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center center;
+            
+            width: 90px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+            z-index: 20; 
+            color: #15402b;
+            background: rgba(225,194,84,0.85);
+            border-radius: 8px;
+            padding: 4px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            
+            /* FINAL TRANSFORMATION */
+            transform: 
+                translate(-50%, -50%) 
+                rotate(calc(var(--i) * 60deg)) 
+                translate(120px, 0) 
+                rotate(-90deg); 
+        }
+
+        @media (max-width: 400px) {
+            .prize-text {
+                width: 60px;
+                font-size: 11px;
+                transform: 
+                    translate(-50%, -50%) 
+                    rotate(calc(var(--i) * 60deg)) 
+                    translate(90px, 0) 
+                    rotate(-90deg);
+            }
+        }
+
+        .spin-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #e1c254;
+            background-color: #15402b;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+            z-index: 50;
+        }
+
+        .spin-button:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+
+        /* --- Modal Styling --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .prize-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #15402b;
+            margin-bottom: 15px;
+        }
+
+        .modal input[type="text"],
+        .modal input[type="tel"] {
+            width: 90%;
+            padding: 10px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .modal button {
+            background-color: #15402b;
+            color: #e1c254;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        /* Styling for the Menu Link */
+        .menu-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #f1c232; /* Use a brand color (yellow/gold) */
+            color: #15402b; /* Dark text */
+            text-decoration: none; /* Remove underline */
+            font-weight: bold;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .menu-link:hover {
+            background-color: #e6b820; /* Slightly darker on hover */
+    }
+    </style>
+</head>
+<body>
+
+    <h1>Spin & Win!</h1>
+
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel">
+            <div class="prize-text" style="--i:1;">TRY AGAIN</div>
+            <div class="prize-text" style="--i:2;">20% OFF</div>
+            <div class="prize-text" style="--i:3;">15% OFF COFFEE</div>
+            <div class="prize-text" style="--i:4;">FREE COOKIE</div>
+            <div class="prize-text" style="--i:5;">BOGO FREE</div>
+            <div class="prize-text" style="--i:6;">10% OFF BILL</div>
+        </div>
+
+        <div class="center-logo">
+            <img src="meetup logo 1 new.jpeg" alt="Meetup Coffee Shop Logo">
+        </div>
+    </div>
+
+    <button class="spin-button" id="spinBtn">SPIN TO WIN!</button>
+
+    <div id="prizeModal" class="modal">
+        <div class="modal-content">
+            <h2>🎉 CONGRATULATIONS! 🎉</h2>
+            <div class="prize-display" id="prizeText"></div>
+            <p>Please enter your details to receive your prize code:</p>
+
+            <form id="dataForm">
+                <input type="text" id="userName" placeholder="Your Full Name" required>
+                
+                <input type="tel" id="userPhone" placeholder="8-Digit Phone Number (e.g., 70123456)" minlength="8" maxlength="8" pattern="[0-9]{8}" required>
+                
+                <input type="hidden" id="winningPrize">
+                <input type="hidden" id="prizeCode">
+                
+                <input type="hidden" id="spinTime" name="spinTime">
+                
+                <button type="submit" id="submitBtn">Get My Prize!</button>
+                <div id="statusMessage" style="margin-top: 10px; color: #38761d;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            
+            const wheel = document.getElementById('wheel');
+            const spinBtn = document.getElementById('spinBtn');
+            const modal = document.getElementById('prizeModal');
+            const prizeText = document.getElementById('prizeText');
+            const dataForm = document.getElementById('dataForm');
+            const winningPrizeInput = document.getElementById('winningPrize');
+            const prizeCodeInput = document.getElementById('prizeCode');
+            const statusMessage = document.getElementById('statusMessage');
+            const spinTimeInput = document.getElementById('spinTime'); 
+
+            // Prize data with weights (FINAL SYNCHRONIZED ORDER)
+            const prizes = [
+                // Weights are high but are irrelevant for the final structural fix
+                { id: 0, name: "BOGO FREE", weight: 3, angleOffset: 30 }, 
+                { id: 1, name: "10% OFF BILL", weight: 32, angleOffset: 90 }, 
+                { id: 2, name: "Try Again", weight: 27, angleOffset: 150 }, 
+                { id: 3, name: "20% OFF", weight: 15, angleOffset: 210 }, 
+                { id: 4, name: "15% OFF COFFEE", weight: 20, angleOffset: 270 }, 
+                { id: 5, name: "FREE COOKIE", weight: 3, angleOffset: 330 } 
+            ];
+
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFt3seMxw9EYqHx0J6s-jJOm96u-e5h6QLCITdFYL7sWaUzOd5MsD57K3aJth5Gd7G/exec'; 
+
+            function getWinningPrize() {
+                let totalWeight = prizes.reduce((sum, prize) => sum + prize.weight, 0);
+                let randomNum = Math.random() * totalWeight;
+                let cumulativeWeight = 0;
+                for (const prize of prizes) {
+                    cumulativeWeight += prize.weight;
+                    if (randomNum < cumulativeWeight) {
+                        return prize;
+                    }
+                }
+                return prizes[0]; 
+            }
+
+            function generatePrizeCode() {
+                return 'MC-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            }
+
+            if (spinBtn) { 
+                spinBtn.addEventListener('click', () => {
+                    spinTimeInput.value = new Date().getTime(); 
+
+                    spinBtn.disabled = true;
+                    statusMessage.textContent = '';
+                    
+                    wheel.style.transition = 'none';
+                    wheel.style.transform = 'rotate(0deg)';
+                    void wheel.offsetWidth; 
+
+                    const winningPrize = getWinningPrize();
+                    const prizeCode = generatePrizeCode();
+                    
+                    const minAngle = winningPrize.angleOffset - 25;
+                    const maxAngle = winningPrize.angleOffset + 25;
+                    const finalAngle = Math.floor(Math.random() * (maxAngle - minAngle)) + minAngle;
+
+                    const fullRotations = 5 * 360; 
+                    const rotationValue = fullRotations - finalAngle; 
+                    
+                    wheel.style.transition = 'transform 6s cubic-bezier(0.25, 0.1, 0, 1)';
+                    wheel.style.transform = `rotate(${rotationValue}deg)`;
+                    
+                    // Show the Pop-up after the spin finishes (6.1 seconds)
+                    setTimeout(() => {
+                        // Reset modal to winner defaults
+                        document.getElementById('statusMessage').textContent = '';
+                        document.getElementById('submitBtn').style.display = 'block'; 
+                        document.getElementById('userName').style.display = 'block';
+                        document.getElementById('userPhone').style.display = 'block';
+                        document.querySelector('#prizeModal p').textContent = 'Please enter your details to receive your prize code:';
+                        document.querySelector('#prizeModal h2').textContent = '🎉 CONGRATULATIONS! 🎉';
+
+                        prizeText.textContent = winningPrize.name;
+                        winningPrizeInput.value = winningPrize.name;
+                        prizeCodeInput.value = prizeCode;
+
+                        // Check for 'Try Again'
+                        if (winningPrize.name === "Try Again") {
+                            document.getElementById('submitBtn').style.display = 'none';
+                            document.getElementById('userName').style.display = 'none';
+                            document.getElementById('userPhone').style.display = 'none';
+                            document.getElementById('statusMessage').textContent = 'Try again soon!';
+                            document.querySelector('#prizeModal p').textContent = 'Thanks for playing! Better luck next time.';
+                            document.querySelector('#prizeModal h2').textContent = '😞 SORRY! 😞';
+                        }
+                        
+                        modal.style.display = "block";
+                        
+                    }, 6100);
+                });
+            }
+
+
+            // Handle the Form Submission (Data Collection)
+            dataForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const userName = document.getElementById('userName').value;
+                const userPhone = document.getElementById('userPhone').value.trim();
+                
+                // CRITICAL VALIDATION: 8-digit phone number check
+                if (!/^\d{8}$/.test(userPhone)) {
+                    statusMessage.textContent = '❌ Error: Phone number must be exactly 8 digits.';
+                    statusMessage.style.color = 'red';
+                    document.getElementById('submitBtn').disabled = false;
+                    return; 
+                }
+                statusMessage.style.color = '#38761d'; // Reset color
+
+                // Collect the data including spinTime
+                const formData = {
+                    name: userName,
+                    phone: userPhone,
+                    prize: winningPrizeInput.value,
+                    code: prizeCodeInput.value,
+                    date: new Date().toISOString(),
+                    spinTime: spinTimeInput.value 
+                };
+                
+                statusMessage.textContent = 'Submitting...';
+                document.getElementById('submitBtn').disabled = true;
+
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', 
+                        cache: 'no-cache',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    // --- FINAL LOCKDOWN LOGIC APPLIED HERE ---
+                    
+                    // The front-end assumes success because the fetch completed (no-cors mode)
+                    if (formData.prize !== "Try Again") {
+                        // Successful submission (or denial logged on server)
+                        statusMessage.innerHTML = `
+                            ✅ <strong>PRIZE LOGGED!</strong> Your code: <strong>${formData.code}</strong>. Show this to the barista!
+                            <br><br>
+                            <a href="meetup_coffee_menu.jpeg" target="_blank" class="menu-link">    VIEW OUR FULL MENU! ☕
+                            </a>
+                        `;
+                        // --- PERMANENT LOCKDOWN OF INTERFACE ---
+                        document.getElementById('submitBtn').style.display = 'none'; // Hide submit button
+                        document.getElementById('userName').disabled = true; // Lock fields
+                        document.getElementById('userPhone').disabled = true;
+                        spinBtn.style.display = 'none'; // Hide the Spin button permanently
+                        // ----------------------------------------
+                    } else {
+                        // If they got "Try Again," they still get the menu link
+                        statusMessage.innerHTML = `
+                            ✅ Submission logged. Try again soon!
+                            <br><br>
+                            <a href="meetup_coffee_menu.pdf" target="_blank" class="menu-link">
+                                VIEW OUR MENU!
+                            </a>
+                        `;
+                        document.getElementById('submitBtn').style.display = 'none';
+                        document.getElementById('userName').disabled = true;
+                        document.getElementById('userPhone').disabled = true;
+                    }
+                } catch (error) {
+                    console.error('Error submitting data:', error);
+                    statusMessage.textContent = '❌ Submission failed. Please try again.';
+                    document.getElementById('submitBtn').disabled = false;
+                }
+            });
+            
+            // Allows user to close the modal by clicking outside
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                    
+                    // Unlock spin button only if the result was "Try Again"
+                    if (winningPrizeInput.value === "Try Again") {
+                         spinBtn.disabled = false;
+                    }
+                    
+                    // Always reset form fields after closing
+                    document.getElementById('userName').disabled = false;
+                    document.getElementById('userPhone').disabled = false;
+                    document.getElementById('submitBtn').disabled = false;
+                    dataForm.reset();
+                }
+            }
+        }); 
+    </script>
+</body>
+</html>
+
+
+
